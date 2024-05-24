@@ -1055,21 +1055,26 @@ router.get('/yarnreport/:id', (req, res, next) => {
                         res.json({ success: false, message: 'no records found!', employee: [] });
                     }
                     else {
-                        rows.RowDataPacket[1].forEach(data => {
-                            let order_allocationData = data.order_allocation.replace(/([{,]\s*)(\w+)\s*:/g, '$1"$2":')
-                                .replace(/:\s*([^,\}\[]+)\s*(?=[,\}])/g, ': "$1"');
-                            // const all = rows.RowDataPacket;
-                            const yarn = rows.RowDataPacket[0];
-                            const yarn_lc_lines = rows.RowDataPacket[1];
-                            res.send({
-                                success: true,
-                                yarn: yarn,
-                                yarn_lc_lines: yarn_lc_lines,
-                                OrderAllocationData : JSON.parse(order_allocationData)
-                            })
-                        });
+                        const yarn = rows.RowDataPacket[0];
+                        const yarn_lc_lines = rows.RowDataPacket[1];
+                        const yarn_lot_check = rows.RowDataPacket[2];
+                        const yarn_order_allocations = rows.RowDataPacket[3];
+                        const yarn_receipts_lines = rows.RowDataPacket[4];
+                        const yarn_quality_check = rows.RowDataPacket[5];
+                        const yarn_total = rows.RowDataPacket[6]
+                        const yarn_lotNo = rows.RowDataPacket[7]
+                        res.send({
+                            success: true,
+                            yarn :  yarn,
+                            yarn_lc_lines :  yarn_lc_lines,
+                            yarn_lc_total : yarn_total,
+                            yarn_lot_check :  yarn_lot_check,
+                            yarn_order_allocations :  yarn_order_allocations,
+                            yarn_receipts_lines :  yarn_receipts_lines,
+                            yarn_quality_check :  yarn_quality_check,
+                            lotNo: yarn_lotNo
+                        })
                     }
-
                 }
                 catch (err) {
                     next(err)
