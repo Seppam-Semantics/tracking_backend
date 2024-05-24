@@ -67,7 +67,7 @@ router.get('/yarn-lcNo', (req, res, next) => {
         var orgId = req.decoded.orgId;
         var spinner = req.query.spinner;
 
-        client.executeStoredProcedure('pgetall_yarnlcNo(?,?)', [spinner,orgId],
+        client.executeStoredProcedure('pgetall_yarnlcNo(?,?)', [spinner, orgId],
             req, res, next, function (result) {
                 try {
                     rows = result;
@@ -143,7 +143,7 @@ router.get('/yarn-some-status', (req, res, next) => {
         var spinner = req.query.spinner;
         var lcNo = req.query.lcNo;
 
-        client.executeStoredProcedure('pget_yarnStatus(?,?,?)', [spinner,lcNo,orgId],
+        client.executeStoredProcedure('pget_yarnStatus(?,?,?)', [spinner, lcNo, orgId],
             req, res, next, function (result) {
                 try {
                     rows = result;
@@ -234,16 +234,23 @@ router.get('/yarn/:id', (req, res, next) => {
                         const yarn_quality_check = rows.RowDataPacket[5];
                         const yarn_total = rows.RowDataPacket[6]
                         const yarn_lotNo = rows.RowDataPacket[7]
+                        // const mergedData = {};
+                        // rows.RowDataPacket.forEach(packet => {
+                        //     Object.assign(mergedData, packet);
+                        // });
                         res.send({
                             success: true,
-                            yarn :  yarn,
-                            yarn_lc_lines :  yarn_lc_lines,
-                            yarn_lc_total : yarn_total,
-                            yarn_lot_check :  yarn_lot_check,
-                            yarn_order_allocations :  yarn_order_allocations,
-                            yarn_receipts_lines :  yarn_receipts_lines,
-                            yarn_quality_check :  yarn_quality_check,
+                            yarn: yarn,
+                            yarn_lc_lines: yarn_lc_lines,
+                            yarn_lc_total: yarn_total,
+                            yarn_lot_check: yarn_lot_check,
+                            yarn_order_allocations: yarn_order_allocations,
+                            yarn_receipts_lines: yarn_receipts_lines,
+                            yarn_quality_check: yarn_quality_check,
                             lotNo: yarn_lotNo
+
+                            // success: true,
+                            // mergedData: mergedData
                         })
                     }
                 }
@@ -255,7 +262,7 @@ router.get('/yarn/:id', (req, res, next) => {
     catch (err) {
         next(err)
     }
-}); 
+});
 
 router.get('/yarnReceiptForQC', (req, res, next) => {
     try {
@@ -263,7 +270,7 @@ router.get('/yarnReceiptForQC', (req, res, next) => {
         var id = req.query.id;
         var receiptId = req.query.receiptId
 
-        client.executeStoredProcedure('pget_yarnReceiptForQC(?,?,?)', [id,receiptId,orgId],
+        client.executeStoredProcedure('pget_yarnReceiptForQC(?,?,?)', [id, receiptId, orgId],
             req, res, next, function (result) {
                 try {
                     rows = result;
@@ -271,9 +278,11 @@ router.get('/yarnReceiptForQC', (req, res, next) => {
                         res.json({ success: false, message: 'no records found!', receipt: [] });
                     }
                     else {
-                        res.send({ success: true, 
+                        res.send({
+                            success: true,
                             receipt: rows.RowDataPacket[0],
-                            yarnQc : rows.RowDataPacket[1] })
+                            yarnQc: rows.RowDataPacket[1]
+                        })
                     }
                 }
                 catch (err) {
@@ -293,7 +302,7 @@ router.get('/yarnlclineForLot', (req, res, next) => {
         var id = req.query.id;
         var lineId = req.query.lineId
 
-        client.executeStoredProcedure('pget_yarnLineforLot(?,?,?)', [id,lineId,orgId],
+        client.executeStoredProcedure('pget_yarnLineforLot(?,?,?)', [id, lineId, orgId],
             req, res, next, function (result) {
                 try {
                     rows = result;
@@ -320,7 +329,7 @@ router.get('/yarnlclineForOrder', (req, res, next) => {
         var id = req.query.id;
         var lineId = req.query.lineId
 
-        client.executeStoredProcedure('pget_yarnLineforOrder(?,?,?)', [id,lineId,orgId],
+        client.executeStoredProcedure('pget_yarnLineforOrder(?,?,?)', [id, lineId, orgId],
             req, res, next, function (result) {
                 try {
                     rows = result;
@@ -347,7 +356,7 @@ router.get('/yarnlclineForReceipt', (req, res, next) => {
         var id = req.query.id;
         var lineId = req.query.lineId
 
-        client.executeStoredProcedure('pget_yarnLineforReceipt(?,?,?)', [id,lineId,orgId],
+        client.executeStoredProcedure('pget_yarnLineforReceipt(?,?,?)', [id, lineId, orgId],
             req, res, next, function (result) {
                 try {
                     rows = result;
@@ -511,9 +520,9 @@ router.post('/yarn_order_allocations', async (req, res, next) => {
             var line_id = datalist.id ? datalist.id : 0;
             var yarnLineId = datalist.yarnLineId ? datalist.yarnLineId : 0;
             var yarnType = datalist.yarnType ? datalist.yarnType : '';
-            var buyer = datalist.buyer ? datalist.buyer: '';
+            var buyer = datalist.buyer ? datalist.buyer : '';
             var utilisationOrderNo = datalist.utilisationOrderNo ? datalist.utilisationOrderNo : '';
-            var style = datalist.style? datalist.style : '';
+            var style = datalist.style ? datalist.style : '';
             var colour = datalist.colour ? datalist.colour : '';
             var lotNo = datalist.lotNo ? datalist.lotNo : '';
             var allocatedYarnKgs = datalist.allocatedYarnKgs ? datalist.allocatedYarnKgs : '';
@@ -903,37 +912,96 @@ router.get('/yarn_line_data', (req, res, next) => {
 });
 
 
-router.get('/yarnreport/:id', (req, res, next) => {
+// router.get('/yarnreport/:id', (req, res, next) => {
+//     try {
+//         var id = req.params.id;
+//         var orgId = req.decoded.orgId;
+//         client.executeStoredProcedure('pview_yarn_report(?,?)', [id, orgId],
+//             req, res, next, async function (result) {
+//                 try {
+//                     rows = result;
+//                     //console.log(rows.RowDataPacket);
+//                     if (!rows.RowDataPacket) {
+//                         res.json({ success: false, message: 'no records found!', employee: [] });
+//                     }
+//                     else {
+//                         const yarn = rows.RowDataPacket[0];
+//                         const yarn_lc_lines = rows.RowDataPacket[1];
+//                         const yarn_lot_check = rows.RowDataPacket[2];
+//                         const yarn_order_allocations = rows.RowDataPacket[3];
+//                         const yarn_receipts_lines = rows.RowDataPacket[4];
+//                         const yarn_quality_check = rows.RowDataPacket[5];
+//                         const yarn_total = rows.RowDataPacket[6]
+//                         const yarn_lotNo = rows.RowDataPacket[7]
+//                         res.send({
+//                             success: true,
+//                             yarn :  yarn,
+//                             yarn_lc_lines :  yarn_lc_lines,
+//                             yarn_lc_total : yarn_total,
+//                             yarn_lot_check :  yarn_lot_check,
+//                             yarn_order_allocations :  yarn_order_allocations,
+//                             yarn_receipts_lines :  yarn_receipts_lines,
+//                             yarn_quality_check :  yarn_quality_check,
+//                             lotNo: yarn_lotNo
+//                         })
+//                     }
+//                 }
+//                 catch (err) {
+//                     next(err)
+//                 }
+//             });
+//     }
+//     catch (err) {
+//         next(err)
+//     }
+// }); 
+
+
+router.get('/LC-Outstanding', (req, res, next) => {
     try {
-        var id = req.params.id;
+
         var orgId = req.decoded.orgId;
-        client.executeStoredProcedure('pview_yarn_report(?,?)', [id, orgId],
+        var date = req.query.date ? req.query.date : ''
+        console.log(date)
+        Query = `select 
+        y.lcNo, 
+        date_format(y.lcDate , "%Y-%m-%d" ) as lcDate,  
+        y.pi, 
+        date_format(y.piDate , "%Y-%m-%d" ) as piDate ,
+        max(yll.yarnType) as yarnType, 
+        yll.lcYarnKgs as lcYarnKgs, 
+        yll.yarnRate as yarnRate, 
+        yll.yarnValue as yarnValue,
+        round(sum(YOA.allocatedYarnKgs),2) as allocatedYarnKgs, 
+        round(sum(YOA.unallocatedYarnKgs),2) as unallocatedYarnKgs, 
+        round(sum(YRL.receiptYarnKgs),2) as receiptYarnKgs 
+        from yarn y 
+        left join yarn_lc_lines yll on y.id = yll.yarnId 
+        left join yarn_order_allocations YOA on  y.id = YOA.yarnId
+        left join yarn_receipts_lines YRL on  y.id = YRL.yarnId 
+        where y.orgId = ${orgId} and y.status = 1 and y.delStatus = 0`
+
+        // console.log(Query);
+
+        if (date != '') {
+            Query = Query + ` and date_format(y.lcDate , '%Y-%m-%d' ) = ('${date}')  group by y.lcNo,  y.lcDate, y.pi,  y.piDate, yll.yarnType, yll.lcYarnKgs, yll.yarnRate, yll.yarnValue; `
+        } else {
+            Query = Query + ` group by y.lcNo,  y.lcDate, y.pi,  y.piDate, yll.yarnType, yll.lcYarnKgs, yll.yarnRate, yll.yarnValue; `
+        }
+
+
+        client.executeStoredProcedure('pquery_execution(?)', [Query],
             req, res, next, async function (result) {
                 try {
                     rows = result;
-                    //console.log(rows.RowDataPacket);
+                    // console.log(rows.RowDataPacket);
                     if (!rows.RowDataPacket) {
-                        res.json({ success: false, message: 'no records found!', employee: [] });
+                        res.json({ success: false, message: 'no records found!', workorder: [] });
                     }
                     else {
-                        const yarn = rows.RowDataPacket[0];
-                        const yarn_lc_lines = rows.RowDataPacket[1];
-                        const yarn_lot_check = rows.RowDataPacket[2];
-                        const yarn_order_allocations = rows.RowDataPacket[3];
-                        const yarn_receipts_lines = rows.RowDataPacket[4];
-                        const yarn_quality_check = rows.RowDataPacket[5];
-                        const yarn_total = rows.RowDataPacket[6]
-                        const yarn_lotNo = rows.RowDataPacket[7]
                         res.send({
                             success: true,
-                            yarn :  yarn,
-                            yarn_lc_lines :  yarn_lc_lines,
-                            yarn_lc_total : yarn_total,
-                            yarn_lot_check :  yarn_lot_check,
-                            yarn_order_allocations :  yarn_order_allocations,
-                            yarn_receipts_lines :  yarn_receipts_lines,
-                            yarn_quality_check :  yarn_quality_check,
-                            lotNo: yarn_lotNo
+                            LCOutstanding: rows.RowDataPacket[0],
                         })
                     }
                 }
@@ -945,7 +1013,74 @@ router.get('/yarnreport/:id', (req, res, next) => {
     catch (err) {
         next(err)
     }
-}); 
+});
+
+router.get('/yarn_reconciliation', (req, res, next) => {
+    try {
+        var porgId = req.decoded.porgId;
+        var pdate1 = req.query.date1 ? req.query.date1 : null;
+        var pdate2 = req.query.date2 ? req.query.date2 : null;
+        client.executeStoredProcedure('pyarn_reconciliation(?,?,?)', [pdate1, pdate2, porgId],
+            req, res, next, function (result) {
+                try {
+                    rows = result;
+                    if (!rows.RowDataPacket) {
+                        res.json({ success: false, message: 'no records found!', date: [] });
+                    }
+                    else {
+                        res.send({ success: true, YarnReconciliation: rows.RowDataPacket[0] })
+                    }
+                }
+                catch (err) {
+                    next(err)
+                }
+            });
+    }
+    catch (err) {
+        next(err)
+    }
+});
+
+
+router.get('/yarnreport/:id', (req, res, next) => {
+    try {
+        var id = req.params.id;
+        var orgId = req.decoded.orgId;
+        client.executeStoredProcedure('pview_yarn_report_2(?,?)', [id, orgId],
+            req, res, next, async function (result) {
+                try {
+                    rows = result;
+                    //console.log(rows.RowDataPacket);
+                    if (!rows.RowDataPacket) {
+                        res.json({ success: false, message: 'no records found!', employee: [] });
+                    }
+                    else {
+                        rows.RowDataPacket[1].forEach(data => {
+                            let order_allocationData = data.order_allocation.replace(/([{,]\s*)(\w+)\s*:/g, '$1"$2":')
+                                .replace(/:\s*([^,\}\[]+)\s*(?=[,\}])/g, ': "$1"');
+                            // const all = rows.RowDataPacket;
+                            const yarn = rows.RowDataPacket[0];
+                            const yarn_lc_lines = rows.RowDataPacket[1];
+                            res.send({
+                                success: true,
+                                yarn: yarn,
+                                yarn_lc_lines: yarn_lc_lines,
+                                OrderAllocationData : JSON.parse(order_allocationData)
+                            })
+                        });
+                    }
+
+                }
+                catch (err) {
+                    next(err)
+                }
+            });
+    }
+    catch (err) {
+        next(err)
+    }
+});
+
 
 
 module.exports = router;

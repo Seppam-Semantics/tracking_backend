@@ -620,6 +620,183 @@ router.get('/dye-filter', (req, res, next) => {
 
 
 
+
+router.get('/DF-Inventory', (req, res, next) => {
+    try {
+        var porgId = req.decoded.porgId;
+        var pdate = req.query.date;
+        client.executeStoredProcedure('pdyefactoryinventory(?,?)', [pdate,porgId],
+            req, res, next, function (result) {
+                try {
+                    rows = result;
+                    if (!rows.RowDataPacket) {
+                        res.json({ success: false, message: 'no records found!', date: [] });
+                    }
+                    else {
+                        res.send({ success: true, DyeFactoryInventory: rows.RowDataPacket[0] })
+                    }
+                }
+                catch (err) {
+                    next(err)
+                }
+            });
+    }
+    catch (err) {
+        next(err)
+    }
+});
+
+router.post('/dyeworkorder', async (req, res, next) => {
+    try {
+
+        var loginId = req.decoded.loginId;
+        var orgId = req.decoded.orgId;
+        var id = req.body.id ? req.body.id : 0;
+        var dyefty = req.body.dyefty;
+        var dyefty_details = req.body.knitfty_details;
+        var buyer = req.body.buyer;
+        var orderNo = req.body.orderNo;
+        var woNo = req.body.woNo;
+        var woRefNo = req.body.woRefNo;
+        var woDate = req.body.woDate;
+        var completedDate = req.body.completedDate;
+        var dyeKgs = req.body.knitKgs;
+        var dyeValue = req.body.knitValue;
+        var notes = req.body.notes;
+
+
+        var data = [];
+        var headerQuery = "INSERT INTO tmp_dyewo_line(line_id, dyeWoId, machDia, fabDia, fabType, style, color, fabGSM, pl, dyeKg, dyeRate, dyeValue, remarks, createdBy, orgId) values "
+
+        var data = req.body.data;
+        var i = 0;
+        for (let datalist of data) {
+
+            var line_id = datalist.id? datalist.id : 0;
+            var dyeWoId = id;
+            var machDia = datalist.machDia;
+            var fabDia = datalist.fabDia;
+            var style = datalist.style ? datalist.style : '';
+            var color = datalist.color ? datalist.color : '';
+            var fabType = datalist.fabType;
+            var fabGSM = datalist.fabGSM;
+            var pl = datalist.pl;
+            var dyeKg = datalist.dyeKg;
+            var dyeRate = datalist.dyeRate;
+            var dyeValue = datalist.dyeValue;
+            var remarks = datalist.remarks;
+
+
+            bulkInsert =
+              `(${db.escape(line_id)},
+                ${db.escape(dyeWoId)},
+                ${db.escape(machDia)},
+                ${db.escape(fabDia)},
+                ${db.escape(fabType)},
+                ${db.escape(style)},
+                ${db.escape(color)},
+                ${db.escape(fabGSM)},
+                ${db.escape(pl)},
+                ${db.escape(dyeKg)},
+                ${db.escape(dyeRate)},
+                ${db.escape(dyeValue)},
+                ${db.escape(remarks)},
+                ${db.escape(loginId)},
+                ${db.escape(orgId)})`;
+
+            if (i == (data.length - 1)) {
+                headerQuery = headerQuery + bulkInsert + ';'
+            } else {
+                headerQuery = headerQuery + bulkInsert + ','
+            }
+            i = i + 1;
+        }
+
+        console.log(headerQuery)
+
+        client.executeNonQuery('ppost_dyeWorkOrder(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [id, dyefty, dyefty_details, buyer, orderNo, woNo, woRefNo, woDate, completedDate, dyeKgs, dyeValue, notes, headerQuery, loginId, orgId],
+            req, res, next, function (result) {
+                try {
+                    rows = result;
+                    if (result.success == false) {
+                        res.json({ success: false, message: 'something went worng' });
+                    } else {
+                        if (id == 0) {
+                            res.json({ success: true, message: 'added successfully' });
+                        } else {
+                            res.json({ success: true, message: 'updated successfully' });
+                        }
+
+                    }
+                }catch (err) {
+                    next(err)
+                }
+            });
+    }
+    catch (err) {
+        next(err)
+    }
+});
+
+
+router.get('/dyeworkorder', (req, res, next) => {
+    try {
+        var orgId = req.decoded.orgId;
+
+        client.executeStoredProcedure('pgetall_dyeworkorder(?)', [orgId],
+            req, res, next, function (result) {
+                try {
+                    rows = result;
+                    if (!rows.RowDataPacket) {
+                        res.json({ success: false, message: 'no records found!', workorders: [] });
+                    }
+                    else {
+                        res.send({ success: true, workorders: rows.RowDataPacket[0] })
+                    }
+                }
+                catch (err) {
+                    next(err)
+                }
+            });
+    }
+    catch (err) {
+        next(err)
+    }
+});
+
+router.get('/dyeworkorder/:id', (req, res, next) => {
+    try {
+        var id = req.params.id;
+        var orgId = req.decoded.orgId;
+        client.executeStoredProcedure('pview_dyeworkorder(?,?)', [id, orgId],
+            req, res, next, async function (result) {
+                try {
+                    rows = result;
+                    //console.log(rows.RowDataPacket);
+                    if (!rows.RowDataPacket) {
+                        res.json({ success: false, message: 'no records found!', lineData: [] });
+                    }
+                    else {
+                        const header = rows.RowDataPacket[0];
+                        const line = rows.RowDataPacket[1];
+                        res.send({
+                            success: true,
+                            headerData: header,
+                            lineData: line
+                        })
+                    }
+                }
+                catch (err) {
+                    next(err)
+                }
+            });
+    }
+    catch (err) {
+        next(err)
+    }
+});
+
+
 module.exports = router;
 
 

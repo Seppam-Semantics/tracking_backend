@@ -55,15 +55,21 @@ router.get('/roles', (req, res, next) => {
             req, res, next, function (result) {
                 try {
                     rows = result;
-                    //console.log(rows.RowDataPacket);
                     if (!rows.RowDataPacket) {
                         res.json({ success: false, message: 'no records found!', roles: [] });
                     }
                     else {
-                        rows.RowDataPacket[0].forEach(data => {
-                            data.profiles = JSON.parse(data.profiles);
+
+                         rows.RowDataPacket[0].forEach(data => {
+                            try {
+                                data.profiles = JSON.parse(data.profiles);
+                            } catch (error) {
+                                data.profiles = {};
+                            }
                         });
                         res.send({ success: true, roles: rows.RowDataPacket[0] })
+                    
+
                     }
                 }
                 catch (err) {

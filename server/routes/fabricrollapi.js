@@ -758,4 +758,186 @@ router.delete('/entry7', (req, res, next) => {
     }
 });
 
+
+
+router.post('/fabrictransfer', async (req, res, next) => {
+    try {
+        // console.log(req.body)
+        var loginId = req.decoded.loginId;
+        var orgId = req.decoded.orgId;
+        var data = [];
+        var headerQuery = "INSERT INTO tmp_fab_entry(fabId,transferNo,transferDate,buyer,orderNo,style,color,size,woId,fabRolls,finishFabKg,createdBy,orgId) values "
+        var data = req.body.fabentry;
+        var i = 0;
+
+        for (let datalist of data) {
+            var id = datalist.id ? datalist.id : 0;
+            var buyer = datalist.buyer;
+            var orderNo = datalist.orderNo;
+            var style = datalist.style;
+            var color = datalist.color;
+            var size = datalist.size;
+            var woId = datalist.woId;
+            var transferNo = datalist.transferNo;
+            var fabRolls = datalist.fabRolls;
+            var finishFabKg = datalist.finishFabKg ? datalist.finishFabKg : 0;
+            var transferDate = datalist.transferDate;
+
+            bulkInsert =
+
+                `(${db.escape(id)},${db.escape(transferNo)},${db.escape(transferDate)},${db.escape(buyer)},${db.escape(orderNo)},${db.escape(style)},${db.escape(color)},${db.escape(size)},${db.escape(woId)},${db.escape(fabRolls)},${db.escape(finishFabKg)},${db.escape(loginId)},${db.escape(orgId)})`;
+
+            if (i == (data.length - 1)) {
+                headerQuery = headerQuery + bulkInsert + ';'
+            } else {
+                headerQuery = headerQuery + bulkInsert + ','
+
+            }
+
+            i = i + 1;
+        }
+
+        console.log(headerQuery)
+
+        client.executeNonQuery('ppost_fabrictransfer(?,?,?)', [headerQuery, loginId, orgId],
+            req, res, next, function (result) {
+                try {
+                    rows = result;
+                    if (result.success == false) {
+                        res.json({ success: false, message: 'Something went worng' });
+                    } else {
+                        res.json({ success: true, message: 'Added successfully' });
+                    }
+                }
+                catch (err) {
+                    next(err)
+                }
+            });
+    }
+    catch (err) {
+        next(err)
+    }
+});
+
+router.get('/allFabEntrys', (req, res, next) => {
+    try {
+        var orgId = req.decoded.orgId;
+        var Buyer = req.query.Buyer ? req.query.Buyer : '';
+        var Order = req.query.Order ? req.query.Order : '';
+        var ToDate = req.query.toDate ? req.query.toDate : '';
+        var FromDate = req.query.fromDate ? req.query.fromDate : '';
+        Query = `SELECT 
+        id, 
+        buyer, 
+        orderNo, 
+        style, 
+        color, 
+        size, 
+        woId, 
+        rollNo, 
+        finishKg, 
+        date_format(transfer_date, "%Y-%m-%d") AS transfer_date, 
+        transferno , 
+        date_format(createdAt ,"%Y-%m-%d")
+        FROM fabrictransfer WHERE orgId = ${orgId}`
+
+        if (Buyer != '') {
+            Query = Query + ` and buyer = ('${Buyer}')`
+        }
+        
+        if (Order != '') {
+            Query = Query + ` and orderNo = ('${Order}')`
+        }
+
+        if (FromDate != '') {
+            Query = Query + ` and date_format(createdAt ,"%Y-%m-%d") BETWEEN ('${FromDate}') AND ('${ToDate}')`
+        }
+
+
+        client.executeStoredProcedure('pquery_execution(?)', [Query],
+            req, res, next, async function (result) {
+                try {
+                    rows = result;
+                    if (!rows.RowDataPacket) {
+                        res.json({ success: false, message: 'no records found!', fabDetails: [] });
+                    }
+                    else {
+                        const fabDetails = rows.RowDataPacket;
+
+                        res.send({
+                            success: true,
+                            fabDetails: fabDetails
+                        })
+                    }
+                }
+                catch (err) {
+                    next(err)
+                }
+            });
+    }
+    catch (err) {
+        next(err)
+    }
+});
+
+
+
+
+router.get('/singleFabEntrys/:id', (req, res, next) => {
+    try {
+        var id = req.params.id;
+        var orgId = req.decoded.orgId;
+        client.executeStoredProcedure('pview_fabEntry(?,?)', [id, orgId],
+            req, res, next, async function (result) {
+                try {
+                    rows = result;
+                    if (!rows.RowDataPacket) {
+                        res.json({ success: false, message: 'no records found!', fabDetails: [] });
+                    }
+                    else {
+                        const fabDetails = rows.RowDataPacket;
+
+                        res.send({
+                            success: true,
+                            fabDetails: fabDetails
+                        })
+                    }
+                }
+                catch (err) {
+                    next(err)
+                }
+            });
+    }
+    catch (err) {
+        next(err)
+    }
+});
+
+
+router.delete('/FabEntrysDelete/:id', (req, res, next) => {
+    try {
+        var id = req.params.id;
+        var orgId = req.decoded.orgId;
+        client.executeNonQuery('pdelete_FabricsTransferList(?,?)', [id,orgId],
+            req, res, next, function (result) {
+                try {
+                    rows = result;
+
+                    if (result.affectedRows == 0) {
+                        res.json({ success: false, message: 'exsists' });
+                    } else {
+                        res.json({ success: true, message: 'delete successfully' });
+                    }
+                }
+                catch (err) {
+                    next(err)
+                }
+            });
+    }
+    catch (err) {
+        next(err)
+    }
+});
+
+
 module.exports = router;

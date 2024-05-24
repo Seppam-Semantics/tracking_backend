@@ -80,11 +80,10 @@ router.get('/employee/:id', (req, res, next) => {
     try {
         var id = req.params.id;
         var orgId = req.decoded.orgId;
-        client.executeStoredProcedure('pview_employee(?,?)', [id, orgId],
+        client.executeStoredProcedure('pview_employee(?,?)', [orgId , id],
             req, res, next, async function (result) {
                 try {
                     rows = result;
-                    //console.log(rows.RowDataPacket);
                     if (!rows.RowDataPacket) {
                         res.json({ success: false, message: 'no records found!', employee: [] });
                     }
@@ -105,6 +104,7 @@ router.get('/employee/:id', (req, res, next) => {
         next(err)
     }
 });
+
 
 
 router.post('/employee', async (req, res, next) => {

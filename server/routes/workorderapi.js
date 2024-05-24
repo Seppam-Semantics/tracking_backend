@@ -104,35 +104,41 @@ router.post('/workorder', async (req, res, next) => {
         var loginId = req.decoded.loginId;
         var orgId = req.decoded.orgId;
         var data = [];
-        var headerQuery = "INSERT INTO tmp_workorder(id,buyer,orderno,style,color,size,fabType,fabDia,fabGsm,yarnKg,greigeKg,yarnType,finishKg,knitSL,spinFty,knitFty,dyeinFty,noDays,createdBy,orgId) values "
+        var headerQuery = "INSERT INTO tmp_workorder(id,buyer,orderno,style,color,size,fabType,fabDia,fabGsm,yarnKg,greigeKg,yarnType,finishKg,knitSL,spinFty,knitFty,dyeinFty,noDays,orderPcs,orderFOBRate,knitRate,dyeRate,gSize,createdBy,orgId) values "
 
         var data = req.body;
         var i = 0;
         for (let datalist of data) {
 
             var id = datalist.id ? datalist.id : 0;
-            var buyer = datalist.buyer;
-            var orderNo = datalist.orderNo;
-            var style = datalist.style;
-            var color = datalist.color;
-            var size = datalist.size;
-            var fabType = datalist.fabType;
-            var fabDia = datalist.fabDia;
-            var fabGsm = datalist.fabGsm;
-            var yarnKg = datalist.yarnKg;
-            var greigeKg = datalist.greigeKg;
-            var yarnType = datalist.yarnType;
-            var finishKg = datalist.finishKg;
-            var knitSL = datalist.knitSL;
-            var spinFty = datalist.spinFty;
-            var knitFty = datalist.knitFty;
-            var dyeinFty = datalist.dyeinFty;
+            var buyer = datalist.Buyer;
+            var orderNo = datalist.OrderNo;
+            var style = datalist.Style;
+            var color = datalist.Color;
+            var FSize = datalist.FSize;
+            var fabType = datalist.FabType;
+            var fabDia = datalist.FabDia;
+            var fabGsm = datalist.FabGsm;
+            var yarnKg = datalist.YarnKg;
+            var greigeKg = datalist.GreigeKg;
+            var yarnType = datalist.YarnType;
+            var finishKg = datalist.FinishKg;
+            var knitSL = datalist.KnitSL;
+            var spinFty = datalist.SpinFty;
+            var knitFty = datalist.KnitFty;
+            var dyeinFty = datalist.DyeinFty;
             var noDays = datalist.noDays;
+            var OrderPcs = datalist.OrderPcs;
+            var OrderFOBRate = datalist.OrderFOBRate;
+            var KnitRate = datalist.KnitRate;
+            var DyeRate = datalist.DyeRate;
+            var GSize = datalist.GSize;
+
 
 
             bulkInsert =
 
-                `(${db.escape(id)},${db.escape(buyer)},${db.escape(orderNo)},${db.escape(style)},${db.escape(color)},${db.escape(size)},${db.escape(fabType)},${db.escape(fabDia)},${db.escape(fabGsm)},${db.escape(yarnKg)},${db.escape(greigeKg)},${db.escape(yarnType)},${db.escape(finishKg)},${db.escape(knitSL)},${db.escape(spinFty)},${db.escape(knitFty)},${db.escape(dyeinFty)},${db.escape(noDays)},${db.escape(loginId)},${db.escape(orgId)})`;
+                `(${db.escape(id)},${db.escape(buyer)},${db.escape(orderNo)},${db.escape(style)},${db.escape(color)},${db.escape(FSize)},${db.escape(fabType)},${db.escape(fabDia)},${db.escape(fabGsm)},${db.escape(yarnKg)},${db.escape(greigeKg)},${db.escape(yarnType)},${db.escape(finishKg)},${db.escape(knitSL)},${db.escape(spinFty)},${db.escape(knitFty)},${db.escape(dyeinFty)},${db.escape(noDays)},${db.escape(OrderPcs)},${db.escape(OrderFOBRate)},${db.escape(KnitRate)},${db.escape(DyeRate)},${db.escape(GSize)},${db.escape(loginId)},${db.escape(orgId)})`;
 
             if (i == (data.length - 1)) {
                 headerQuery = headerQuery + bulkInsert + ';'
@@ -202,8 +208,8 @@ router.get('/workorders-filter', (req, res, next) => {
         var size = req.query.size ? req.query.size : '';
         var orgId = req.decoded.orgId;
 
-        Query = `select A.id,A.buyer,A.orderNo,A.style,A.color,A.size,A.fabType, 
-                    A.fabDia, A.fabGsm, A.yarnKg, A.greigeKg, A.yarnType, A.finishKg, A.knitSL, A.spinFty, A.knitFty, A.dyeinFty, A.noDays, A.isPrint, A.status, A.printCount, 
+        Query = `select A.id,A.buyer,A.orderNo,A.style,A.color,A.size,A.gSize,A.fabType, 
+                    A.fabDia, A.fabGsm, A.yarnKg, A.greigeKg, A.yarnType, A.finishKg, A.knitSL, A.spinFty, A.knitFty, A.dyeinFty,A.noDays,A.orderPcs,A.orderFOBRate,A.knitRate,A.dyeRate,A.isPrint,A.status, A.printCount, 
                     (select ROUND(sum(entry_1),2) from transcation_entry1 where workorderId = A.id and orgId = ${orgId} and status = 1 and delStatus = 0) AS total_1,
                     (select sum(noOfRolls) from transcation_entry1 where workorderId = A.id and orgId = ${orgId} and status = 1 and delStatus = 0) as totalRolls_1,
                     (select ROUND(sum(entry_2),2) from transcation_entry2 where workorderId = A.id and orgId = ${orgId} and status = 1 and delStatus = 0) AS total_2,
@@ -287,9 +293,17 @@ router.put('/workorder/:id', async (req, res, next) => {
         var knitFty = req.body.knitFty;
         var dyeinFty = req.body.dyeinFty;
         var noDays = req.body.noDays;
+
+        var orderPcs = req.body.orderPcs;
+        var orderFOBRate = req.body.orderFOBRate;
+        var knitRate = req.body.knitRate;
+        var dyeRate = req.body.dyeRate;
+
+        var GSize = req.body.gSize;
+
         var status = req.body.status;
 
-        client.executeStoredProcedure(`pput_workorder(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [id, buyer, orderNo, style, color, size, fabType, fabDia, fabGsm, yarnKg, greigeKg, yarnType, finishKg, knitSL, spinFty, knitFty, dyeinFty, noDays, status, loginId, orgId],
+        client.executeStoredProcedure(`pput_workorder(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?  ,?,?,?,?,?)`, [id, buyer, orderNo, style, color, size, fabType, fabDia, fabGsm, yarnKg, greigeKg, yarnType, finishKg, knitSL, spinFty, knitFty, dyeinFty, noDays, orderPcs , orderFOBRate , knitRate , dyeRate , GSize ,status, loginId, orgId],
             req, res, next, function (result) {
                 try {
                     rows = result;
